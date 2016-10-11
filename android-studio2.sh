@@ -3,27 +3,40 @@ site="https://developer.android.com/studio/index.html"
 local="$(cd "$(dirname "$0")";pwd)"
 root_dir="$local/"  #local de download e config
 
-links=( $( (curl "$site" | egrep -i android[-].*[l]inux | cut -d'"' -f2 | grep ^http ) 2> /dev/null) )
-
 #Getting links of Android Studio and SDK
+links=( $( curl "$site" 2> /dev/null | grep -P 'https://([^"]*linux[^"]*)' -o ) ) 2>/dev/null || (echo "Erro ao tentar alcançar $site" && exit 0)
+
+echo "Encontrados: "
 for link in "${links[@]}"; do
-	nome="$(echo $link | rev | cut -d'/' -f1 | rev)"
+	nome="$(echo $link | grep -P '([^/]*$)' -o)"
+    if [ ! -z "$(echo $link | egrep studio)" ]; then
+        echo -n "Android Studio: "
+    elif [ ! -z "$(echo $link | egrep sdk)" ]; then
+        echo -n "Android SDK: "
+    else
+        continue #trash links
+    fi
+    echo "$link"
+done
+
+#Downloading
+echo && echo "Baixando..."
+for link in "${links[@]}"; do
+	nome="$(echo $link | grep -P '([^/]*$)' -o)"
 	if [ ! -e "$root_dir""$nome" ]; then 
 		if [ ! -z "$(echo $link | egrep studio)" ]; then
-			echo -n "Baixando Android Studio: "
+			echo "Android Studio"
 		elif [ ! -z "$(echo $link | egrep sdk)" ]; then
-			echo -n "Android SDK: "
+			echo "Android SDK"
 		else
 			continue
 		fi
-	echo "$link"
 
-	(curl "$link" -o "$root_dir""$nome") || (echo "Erro no download de $link" && exit 0)
+    (curl "$link" -o "$root_dir""$nome") || (echo "Erro no download de $link" && exit 0)
 	else
 		echo "Arquivo já encontrado: $nome"
 		continue
 	fi	
-
 done
 
 #Extrair 
