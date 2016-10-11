@@ -1,10 +1,11 @@
 #!/bin/bash
-site="https://developer.android.com/studio/index.html"
+site_android="https://developer.android.com/studio/index.html"
+site_java="http://www.oracle.com/technetwork/pt/java/javase/downloads/index.html"
 local="$(cd "$(dirname "$0")";pwd)"
 root_dir="$local/"  #local de download e config
 
 #Getting links of Android Studio and SDK
-links=( $( curl "$site" 2> /dev/null | grep -P 'https://([^"]*linux[^"]*)' -o ) ) 2>/dev/null || (echo "Erro ao tentar alcançar $site" && exit 0)
+links=( $( curl "$site_android" 2> /dev/null | grep -P 'https://([^"]*linux[^"]*)' -o ) ) 2>/dev/null || (echo "Erro ao tentar alcançar $site_android" && exit 0)
 
 echo "Encontrados: "
 for link in "${links[@]}"; do
@@ -19,7 +20,7 @@ for link in "${links[@]}"; do
     echo "$link"
 done
 
-#Downloading
+#Downloading Android SDK e Studio
 echo && echo "Baixando..."
 for link in "${links[@]}"; do
 	nome="$(echo $link | grep -P '([^/]*$)' -o)"
@@ -38,6 +39,14 @@ for link in "${links[@]}"; do
 		continue
 	fi	
 done
+
+#Downloading java
+site_java2=( $(curl "$site_java" | grep -P 'http[s]?://([^"]*jdk[0-9][0-9]?[-]downloads[^"]*)' -o | uniq) )
+#echo "$site_java2"
+site_java=( $(curl "$site_java2" | grep -P 'http[s]?://([^"]*jdk[-][^"]*linux-x64.tar.gz)' -o) )
+
+echo "$site_java"
+
 
 #Extrair 
 #echo 'y' | android update sdk --no-ui -t number1,number2 #(number get in android list sdk)
