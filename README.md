@@ -4,14 +4,14 @@ Um script para GNU/Linux que prepara o computador para trabalhar com Android. Po
 
 ### Instalando apenas SDK
 Para instalar apenas o SDK basta passar o parâmetro 'sdk'.
-<pre> git clone https://github.com/wison27/android-noroot && cd android-noroot && bash ./android.sh sdk </pre>
+<pre> git clone https://github.com/wison27/noroot-android && cd android-noroot && bash ./android.sh sdk </pre>
 
 ### Instalação Completa
 E para instalar o SDK e o Android Studio só isso.
-<pre> git clone https://github.com/wison27/android-noroot && cd android-noroot && bash ./android.sh </pre>
+<pre> git clone https://github.com/wison27/noroot-android && cd android-noroot && bash ./android.sh </pre>
 
 ### Java
-A instalação do java é feita automaticamente se necessário em todas as formas de instalação.
+A instalação do java é feita automaticamente, quando não é encontrado o javac, em todas as formas de instalação.
 
 ### Como funciona?
-O script vai até o site do java e do Android, pega o link das últimas versões de softwares disponíveis e então os baixa (tudo via curl). Depois só extrai, move para um lugar e configura variáveis (PATH, ANDROID_HOME, ANDROID_SDK, ...) para dizer aonde ele foi instalado.
+O script vai até o site do Java (se necessário) e do Android, pega o link das últimas versões de softwares disponíveis e então os baixa (tudo via curl). Depois só extrai, move para um lugar e configura variáveis (PATH, ANDROID_HOME, ANDROID_SDK, ...) para dizer aonde foram instalados.
