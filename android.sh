@@ -1,14 +1,10 @@
 #!/bin/bash
-local="$(cd "$(dirname "$0")";pwd)"
 site_android="https://developer.android.com/studio/index.html"
 site_java="http://www.oracle.com/technetwork/pt/java/javase/downloads/index.html"
-dest="$HOME"/Android
-download_dir="/tmp/Android"  #local para download
-mkdir -p $download_dir
 
-if [ -z "$(which curl)" ] || [ -z "$(which unzip)" ]; then
+if [ -z "$(which curl)" ] || [ -z "$(which unzip)" ]; then #verificando ferramentas
     echo "Certifique-se que esteja instalado o curl e o unzip."
-    exit 0
+    exit 1
 fi
 
 sdk=0 #indica se baixara soh o sdk
@@ -16,80 +12,119 @@ if [ "$1" = "sdk" ]; then
     sdk=1
 fi
 
+#Cuidando dos locais para download e instalação
+dest="$HOME"/Android #diretório para instalação
+if [ -d "$dest" ];then
+    echo -n "O diretório para ĩnstalação ($dest) já existe. Ele pode ser apagado? [Y/n] "
+    read r
+    if [ "$r" = "n" ] || [ "$r" = "N" ];then
+        echo -ne "\nOk, escolha outro: "
+        read dest
+        while [ -e "$dest" ]; do
+            echo -en "\nDiretório já existe. Tente novamente: "
+            read dest
+        done
+    fi
+    echo "Ok"
+    rm -rf "${dest:?}" 2>/dev/null #limpando a casa
+fi
+
+download_dir="/tmp/Android"  #local para download
+rm -rf "${download_dir:?}"/* 2>/dev/null #limpando
+mkdir -p $download_dir #confirmando a existência
+
+
 #Getting links of Android Studio and SDK
-links=( $( curl -L "$site_android" 2> /dev/null | grep -Eo 'http[s]?://([^"]*linux[^"]*)' | sort | uniq ) ) 2>/dev/null || (echo "Erro ao tentar alcançar $site_android" && exit 0)
+links=( $( curl -L "$site_android" 2> /dev/null | grep -Eo 'http[s]?://([^"]*linux[^"]*)' | sort | uniq ) ) 2>/dev/null || (echo "Erro ao tentar alcançar $site_android" && exit 2)
 links_f=() # links filtrados
 
 echo "Encontrados: "
 for link in "${links[@]}"; do
-	nome="$(echo $link | grep -P '([^/]*$)' -o)"
-    if [ $sdk = 0 ] && [ ! -z "$(echo $link | egrep studio)" ]; then
+	nome="$(echo "$link" | grep -P '([^/]*$)' -o)"
+    if [ $sdk = 0 ] && (echo "$link" | grep -qE studio); then
         echo -n "Android Studio: "
-    elif [ ! -z "$(echo $link | egrep tools)" ]; then
-        echo -n "Android SDK: "
+    elif  echo "$link" | grep -qE tools; then
+        echo -n "SDK Tools: "
     else
         continue #eliminando links indesejáveis
     fi
     links_f+=($link)
     echo "$link"
 done
+
 baixados=()
 
 #Downloading Android SDK e Studio
 echo -e "\nBaixando..."
 for link in "${links_f[@]}"; do
-	nome="$(echo $link | grep -Eo '([^/]*$)' )"
+	nome="$(echo "$link" | grep -Eo '([^/]*$)' )"
 	baixados+=($nome)
 	if [ ! -e "$download_dir/$nome" ]; then 
 		
-        (curl -L -C - "$link" -o "$download_dir/$nome") || (echo "Erro no download de $link" && exit 0)
+        (curl -L -C - "$link" -o "$download_dir/$nome") || (echo "Erro no download de $link" && exit 2)
 	else
 		echo "Arquivo já baixado: $nome"
 		continue
 	fi	
 done
 
-if [ -z "$( which javac 2>/dev/null)" ]; then
+if [ -z "$( which javac 2>/dev/null)" ]; then #verificando se precisa do jdk
     javac=1
 fi
-if [ $javac = 1 ]; then
+if [ "$javac" = 1 ]; then
     #Downloading java
     site_java2=( $(curl -L -s "$site_java" | grep -P 'http[s]?://([^"]*jdk[0-9][0-9]?[-]downloads[^"]*)' -o | uniq) )
     echo "Buscando java"
     link_java=( $(curl -L -s "$site_java2" | grep -P 'http[s]?://([^"]*jdk[-][^"]*linux-x64.tar.gz)' -o) )
-    java="$(echo $link_java | grep -Eo '([^/]*$)' )"
+    java="$(echo "$link_java" | grep -Eo '([^/]*$)' )"
     echo "Java encontrado: $java"
 
     if [ ! -e "$download_dir/$java" ]; then
         echo -e "\nBaixando... "
-        curl -L -C - -H 'Cookie: oraclelicense=accept-securebackup-cookie' $link_java -o "$download_dir/$java"
+        curl -L -C - -H 'Cookie: oraclelicense=accept-securebackup-cookie' "$link_java" -o "$download_dir/$java"
     else
         echo "Arquivo já baixado: $java"    
     fi
 fi
 
-#Extraindo
-echo "Extraindo"
+echo "Extraindo "
 for file in "${baixados[@]}"; do
-    unzip -o "$download_dir/$file" -d "$download_dir"
+    unzip -o "$download_dir/$file" -d "$download_dir" 2>/dev/null >&2
 done
-
+javac=1
 if [ "$javac" = 1 ]; then
-    tar -zxf "$download_dir/$java" -C "$download_dir"
+    tar -zxf "$download_dir/$java" -C "$download_dir" 2>/dev/null >&2 && mv "$download_dir/jdk*/" "$download_dir/jdk"
 fi
 
 #Instalando o SDK
-echo 'O sdk será instalado.'
-mkdir -p $download_dir/sdk
-mv $download_dir/tools $download_dir/sdk
-echo 'y' | $download_dir/sdk/tools/bin/sdkmanager 'platforms;android-25' 'tools' 'build-tools;25.0.3' 'extras;google;m2repository' 'extras;android;m2repository'
-#TODO: verificar com ps processo rodando
-
+mkdir -p $download_dir/Sdk && mv $download_dir/tools $download_dir/Sdk
+echo -n 'O sdk está sendo baixado (aproximadamente 1.5GiB) '
+(echo y | $download_dir/Sdk/tools/bin/sdkmanager 'platforms;android-25' 'tools' 'sources;android-25' 'build-tools;25.0.3' 'extras;google;m2repository' 'extras;android;m2repository' 2>/dev/null >&2) &
+sleep 0.5 #evitar problemas com o ps
+#verificando se sdk ainda está baixando
+while (ps -elf | grep -qEi sdkmanage[r] 2>/dev/null); do
+    echo -n '.'
+done
+echo -e '\nOk'
 rm "${download_dir:?}"/{*.tar.gz,*.zip} 2>/dev/null #tirando arquivos compactados
-mv "$download_dir" "$dest" #movendo para destino final
+(mv "$download_dir" "$dest") || (echo "Não foi possível instalar em $dest." && exit 4) #movendo para destino final
+
 
 #ANDROID_HOME
-export ANDROID_HOME="$dest/sdk"
-#export PATH="$local"/../../java/bin:"$PATH"
+echo 'source $HOME/.androidrc' >> "$HOME"/.bashrc
+echo 'source $HOME/.androidrc' >> "$HOME"/.profile
+
+> "$HOME"/.androidrc #limpando arquivo
+echo 'export ANDROID_HOME='"$dest"'/Sdk' >> "$HOME"/.androidrc
+echo 'export ANDROID_SDK='"$dest"'/Sdk' >> "$HOME"/.androidrc
+if [ "$javac" = 1 ];then
+    echo 'export JDK_HOME='"$dest"'/jdk' >> "$HOME"/.androidrc
+    echo 'export PATH=$JDK_HOME/bin:$PATH' >> "$HOME"/.androidrc
+fi
+echo 'export PATH=$ANDROID_HOME/tools/bin:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$PATH' >> "$HOME"/.androidrc
+if [ "$sdk" = 0 ];then
+    echo 'export PATH='"$dest"/android-studio/bin:'$PATH' >> "$HOME"/.androidrc
+fi
+echo -e "\nReabra os terminais em execução para atualizar."
 #export STUDIO_JDK="$local"/../../java
 #export HOME="$local"/../../HOME
