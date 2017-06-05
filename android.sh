@@ -1,4 +1,13 @@
 #!/bin/bash
+pkgs=( #lista de pacotes que serão instalados pelo sdkmanager
+    'platforms;android-25'
+    'tools'
+    'sources;android-25'
+    'build-tools;25.0.3'
+    'extras;google;m2repository'
+    'extras;android;m2repository' 
+)
+
 site_android="https://developer.android.com/studio/index.html"
 site_java="http://www.oracle.com/technetwork/pt/java/javase/downloads/index.html"
 
@@ -15,7 +24,7 @@ fi
 #Cuidando dos locais para download e instalação
 dest="$HOME"/Android #diretório para instalação
 if [ -d "$dest" ];then
-    echo -n "O diretório para ĩnstalação ($dest) já existe. Ele pode ser apagado? [Y/n] "
+    echo -n "O diretório para instalação ($dest) já existe. Ele pode ser apagado? [Y/n] "
     read r
     if [ "$r" = "n" ] || [ "$r" = "N" ];then
         echo -ne "\nOk, escolha outro: "
@@ -96,13 +105,18 @@ if [ "$javac" = 1 ]; then
     tar -zxf "$download_dir/$java" -C "$download_dir" 2>/dev/null >&2 && mv "$download_dir/jdk*/" "$download_dir/jdk"
 fi
 
-#Instalando o SDK
+#Instalando ferramentas do SDK
 mkdir -p $download_dir/Sdk && mv $download_dir/tools $download_dir/Sdk
-echo -n 'O sdk está sendo baixado (aproximadamente 1.5GiB) '
-(echo y | $download_dir/Sdk/tools/bin/sdkmanager 'platforms;android-25' 'tools' 'sources;android-25' 'build-tools;25.0.3' 'extras;google;m2repository' 'extras;android;m2repository' 2>/dev/null >&2) &
-sleep 0.5 #evitar problemas com o ps
+param=""
+for i in "${pkgs[@]}"; do #concatenando parâmetros para usar no sdkmanager
+    param="$param $i"
+done
+echo 'Serão instalados:'$param
+
+(echo y | $download_dir/Sdk/tools/bin/sdkmanager $param 2>/dev/null >&2) &
+
 #verificando se sdk ainda está baixando
-while (ps -elf | grep -qEi sdkmanage[r] 2>/dev/null); do
+while (ps auxw | grep -qi sdkmanage[r] 2>/dev/null); do
     echo -n '.'
 done
 echo -e '\nOk'
