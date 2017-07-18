@@ -21,6 +21,11 @@ if [ "$1" = "sdk" ]; then
     sdk=1
 fi
 
+javac=0
+if [ "$2" = "jdk" ]; then
+    javac=1
+fi
+
 #Cuidando dos locais para download e instalação
 dest="$HOME"/Android #diretório para instalação
 if [ -d "$dest" ];then
@@ -80,7 +85,7 @@ done
 if [ -z "$( which javac 2>/dev/null)" ]; then #verificando se precisa do jdk
     javac=1
 fi
-if [ "$javac" = 1 ]; then
+if [ $javac = 1 ]; then
     #Downloading java
     site_java2=( $(curl -L -s "$site_java" | grep -P 'http[s]?://([^"]*jdk[0-9][0-9]?[-]downloads[^"]*)' -o | uniq) )
     echo "Buscando java"
@@ -100,9 +105,9 @@ echo "Extraindo "
 for file in "${baixados[@]}"; do
     unzip -o "$download_dir/$file" -d "$download_dir" 2>/dev/null >&2
 done
-javac=1
-if [ "$javac" = 1 ]; then
-    tar -zxf "$download_dir/$java" -C "$download_dir" 2>/dev/null >&2 && mv "$download_dir/jdk*/" "$download_dir/jdk"
+
+if [ $javac = 1 ]; then
+    tar -zxf "$download_dir/$java" -C "$download_dir" ; mv "$download_dir"/jdk*/ "$download_dir"/jdk
 fi
 
 #Instalando ferramentas do SDK
@@ -131,8 +136,9 @@ echo 'source $HOME/.androidrc' >> "$HOME"/.profile
 > "$HOME"/.androidrc #limpando arquivo
 echo 'export ANDROID_HOME='"$dest"'/Sdk' >> "$HOME"/.androidrc
 echo 'export ANDROID_SDK='"$dest"'/Sdk' >> "$HOME"/.androidrc
-if [ "$javac" = 1 ];then
+if [ $javac = 1 ];then
     echo 'export JDK_HOME='"$dest"'/jdk' >> "$HOME"/.androidrc
+    echo 'export JAVA_HOME='"$dest"'/jdk' >> "$HOME"/.androidrc
     echo 'export PATH=$JDK_HOME/bin:$PATH' >> "$HOME"/.androidrc
 fi
 echo 'export PATH=$ANDROID_HOME/tools/bin:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$PATH' >> "$HOME"/.androidrc
