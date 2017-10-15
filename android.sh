@@ -118,7 +118,7 @@ for i in "${pkgs[@]}"; do #concatenando parâmetros para usar no sdkmanager
 done
 echo 'Serão instalados:'$param
 
-(echo y | $download_dir/Sdk/tools/bin/sdkmanager $param 2>/dev/null >&2) &
+(yes | $download_dir/Sdk/tools/bin/sdkmanager $param 2>/dev/null >&2) &
 
 #verificando se sdk ainda está baixando
 while (ps auxw | grep -qi sdkmanage[r] 2>/dev/null); do
@@ -127,6 +127,8 @@ done
 echo -e '\nOk'
 rm "${download_dir:?}"/{*.tar.gz,*.zip} 2>/dev/null #tirando arquivos compactados
 (mv "$download_dir" "$dest") || (echo "Não foi possível instalar em $dest." && exit 4) #movendo para destino final
+echo 'Aceitando licenças...'
+(yes | $download_dir/Sdk/tools/bin/sdkmanager --licenses)
 
 
 #ANDROID_HOME
@@ -146,5 +148,3 @@ if [ "$sdk" = 0 ];then
     echo 'export PATH='"$dest"/android-studio/bin:'$PATH' >> "$HOME"/.androidrc
 fi
 echo -e "\nReabra os terminais em execução para atualizar."
-#export STUDIO_JDK="$local"/../../java
-#export HOME="$local"/../../HOME
