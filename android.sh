@@ -128,7 +128,7 @@ echo -e '\nOk'
 rm "${download_dir:?}"/{*.tar.gz,*.zip} 2>/dev/null #tirando arquivos compactados
 (mv "$download_dir" "$dest") || (echo "Não foi possível instalar em $dest." && exit 4) #movendo para destino final
 echo 'Aceitando licenças...'
-(yes | $download_dir/Sdk/tools/bin/sdkmanager --licenses)
+(yes | $dest/Sdk/tools/bin/sdkmanager --licenses)
 
 
 #ANDROID_HOME
