@@ -108,6 +108,10 @@ done
 
 if [ $javac = 1 ]; then
     tar -zxf "$download_dir/$java" -C "$download_dir" ; mv "$download_dir"/jdk*/ "$download_dir"/jdk
+    echo 'export JDK_HOME='"$dest"'/jdk' >> "$HOME"/.androidrc
+    echo 'export JAVA_HOME='"$dest"'/jdk' >> "$HOME"/.androidrc
+    echo 'export PATH=$JDK_HOME/bin:$PATH' >> "$HOME"/.androidrc
+    source "$HOME"/.androidrc
 fi
 
 #Instalando ferramentas do SDK
@@ -138,11 +142,7 @@ echo 'source $HOME/.androidrc' >> "$HOME"/.profile
 > "$HOME"/.androidrc #limpando arquivo
 echo 'export ANDROID_HOME='"$dest"'/Sdk' >> "$HOME"/.androidrc
 echo 'export ANDROID_SDK='"$dest"'/Sdk' >> "$HOME"/.androidrc
-if [ $javac = 1 ];then
-    echo 'export JDK_HOME='"$dest"'/jdk' >> "$HOME"/.androidrc
-    echo 'export JAVA_HOME='"$dest"'/jdk' >> "$HOME"/.androidrc
-    echo 'export PATH=$JDK_HOME/bin:$PATH' >> "$HOME"/.androidrc
-fi
+
 echo 'export PATH=$ANDROID_HOME/tools/bin:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$PATH' >> "$HOME"/.androidrc
 if [ "$sdk" = 0 ];then
     echo 'export PATH='"$dest"/android-studio/bin:'$PATH' >> "$HOME"/.androidrc
