@@ -12,7 +12,7 @@ site_android="https://developer.android.com/studio/index.html"
 site_java="http://www.oracle.com/technetwork/pt/java/javase/downloads/index.html"
 
 if [ -z "$(which curl)" ] || [ -z "$(which unzip)" ]; then #verificando ferramentas
-    echo "Certifique-se que esteja instalado o curl e o unzip."
+    echo "Make sure curl and unzip are installed."
     exit 1
 fi
 
@@ -29,13 +29,13 @@ fi
 #Cuidando dos locais para download e instalação
 dest="$HOME"/Android #diretório para instalação
 if [ -d "$dest" ];then
-    echo -n "O diretório para instalação ($dest) já existe. Ele pode ser apagado? [Y/n] "
+    echo -n "The install directory ($dest) already exist. Can it be deleted ? [Y/n] "
     read r
     if [ "$r" = "n" ] || [ "$r" = "N" ];then
-        echo -ne "\nOk, escolha outro: "
+        echo -ne "\nOk, choose other: "
         read dest
         while [ -e "$dest" ]; do
-            echo -en "\nDiretório já existe. Tente novamente: "
+            echo -en "\nAlready exist. Try again: "
             read dest
         done
     fi
@@ -52,7 +52,7 @@ mkdir -p $download_dir #confirmando a existência
 links=( $( curl -L "$site_android" 2> /dev/null | grep -Eo 'http[s]?://([^"]*linux[^"]*)' | sort | uniq ) ) 2>/dev/null || (echo "Erro ao tentar alcançar $site_android" && exit 2)
 links_f=() # links filtrados
 
-echo "Encontrados: "
+echo "Founded: "
 for link in "${links[@]}"; do
 	nome="$(echo "$link" | grep -P '([^/]*$)' -o)"
     if [ $sdk = 0 ] && (echo "$link" | grep -qE studio); then
@@ -69,7 +69,7 @@ done
 baixados=()
 
 #Downloading Android SDK e Studio
-echo -e "\nBaixando..."
+echo -e "\nDownloading..."
 for link in "${links_f[@]}"; do
 	nome="$(echo "$link" | grep -Eo '([^/]*$)' )"
 	baixados+=($nome)
@@ -77,7 +77,7 @@ for link in "${links_f[@]}"; do
 		
         (curl -L -C - "$link" -o "$download_dir/$nome") || (echo "Erro no download de $link" && exit 2)
 	else
-		echo "Arquivo já baixado: $nome"
+		echo "File already exist: $nome"
 		continue
 	fi	
 done
@@ -88,10 +88,10 @@ fi
 if [ $javac = 1 ]; then
     #Downloading java
     site_java2=( $(curl -L -s "$site_java" | grep -P 'http[s]?://([^"]*jdk[0-9][0-9]?[-]downloads[^"]*)' -o | uniq) )
-    echo "Buscando java"
+    echo "Finding java"
     link_java=( $(curl -L -s "$site_java2" | grep -P 'http[s]?://([^"]*jdk[-][^"]*linux-x64.tar.gz)' -o) )
     java="$(echo "$link_java" | grep -Eo '([^/]*$)' )"
-    echo "Java encontrado: $java"
+    echo "Java founded: $java"
 
     if [ ! -e "$download_dir/$java" ]; then
         echo -e "\nBaixando... "
@@ -101,7 +101,7 @@ if [ $javac = 1 ]; then
     fi
 fi
 
-echo "Extraindo "
+echo "Uncompressing "
 for file in "${baixados[@]}"; do
     unzip -o "$download_dir/$file" -d "$download_dir" 2>/dev/null >&2
 done
@@ -120,7 +120,7 @@ param=""
 for i in "${pkgs[@]}"; do #concatenando parâmetros para usar no sdkmanager
     param="$param $i"
 done
-echo 'Serão instalados:'$param
+echo 'Will be installed:'$param
 
 (yes | $download_dir/Sdk/tools/bin/sdkmanager $param 2>/dev/null >&2) &
 
@@ -130,7 +130,7 @@ while (ps auxw | grep -qi sdkmanage[r] 2>/dev/null); do
 done
 echo -e '\nOk'
 rm "${download_dir:?}"/{*.tar.gz,*.zip} 2>/dev/null #tirando arquivos compactados
-(mv "$download_dir" "$dest") || (echo "Não foi possível instalar em $dest." && exit 4) #movendo para destino final
+(mv "$download_dir" "$dest") || (echo "Do not is possible install in $dest." && exit 4) #movendo para destino final
 echo 'Aceitando licenças...'
 (yes | $dest/Sdk/tools/bin/sdkmanager --licenses)
 
@@ -147,4 +147,4 @@ echo 'export PATH=$ANDROID_HOME/tools/bin:$ANDROID_HOME/tools:$ANDROID_HOME/plat
 if [ "$sdk" = 0 ];then
     echo 'export PATH='"$dest"/android-studio/bin:'$PATH' >> "$HOME"/.androidrc
 fi
-echo -e "\nReabra os terminais em execução para atualizar."
+echo -e "\nReopen the execution terminals to apply."
