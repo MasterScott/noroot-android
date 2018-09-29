@@ -1,9 +1,9 @@
 #!/bin/bash
 pkgs=( #lista de pacotes que serão instalados pelo sdkmanager
-    'platforms;android-26'
+    'platforms;android-27'
     'tools'
-    'sources;android-26'
-    'build-tools;26.0.2'
+    'sources;android-27'
+    'build-tools;27.0.3'
     'extras;google;m2repository'
     'extras;android;m2repository' 
 )
