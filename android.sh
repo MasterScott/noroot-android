@@ -7,6 +7,8 @@ pkgs=( #lista de pacotes que serão instalados pelo sdkmanager
     'extras;google;m2repository'
     'extras;android;m2repository' 
 )
+dest="$HOME"/Android #diretório para instalação
+so="$(uname | tr '[:upper:]' '[:lower:]')"
 
 site_android="https://developer.android.com/studio/index.html"
 site_java="http://www.oracle.com/technetwork/pt/java/javase/downloads/index.html"
@@ -17,7 +19,7 @@ if [ -z "$(which curl)" ] || [ -z "$(which unzip)" ]; then #verificando ferramen
 fi
 
 sdk=0 #indica se baixara soh o sdk
-if [ "$1" = "sdk" ]; then
+if [ "$1" = "sdk" ] || [ "$so" = "darwin" ]; then
     sdk=1
 fi
 
@@ -27,7 +29,6 @@ if [ "$2" = "jdk" ]; then
 fi
 
 #Cuidando dos locais para download e instalação
-dest="$HOME"/Android #diretório para instalação
 if [ -d "$dest" ];then
     echo -n "The install directory ($dest) already exist. Can it be deleted ? [Y/n] "
     read r
@@ -49,12 +50,12 @@ mkdir -p $download_dir #confirmando a existência
 
 
 #Getting links of Android Studio and SDK
-links=( $( curl -L "$site_android" 2> /dev/null | grep -Eo 'http[s]?://([^"]*linux[^"]*)' | sort | uniq ) ) 2>/dev/null || (echo "Erro ao tentar alcançar $site_android" && exit 2)
+links=( $( curl -L "$site_android" 2> /dev/null | grep -Eo 'http[s]?://([^"]*'$so'[^"]*)' | sort | uniq ) ) 2>/dev/null || (echo "Erro ao tentar alcançar $site_android" && exit 2)
 links_f=() # links filtrados
 
 echo "Founded: "
 for link in "${links[@]}"; do
-	nome="$(echo "$link" | grep -P '([^/]*$)' -o)"
+	nome="$(echo "$link" | grep -E '([^/]*$)' -o)"
     if [ $sdk = 0 ] && (echo "$link" | grep -qE studio); then
         echo -n "Android Studio: "
     elif  echo "$link" | grep -qE tools; then
@@ -82,14 +83,18 @@ for link in "${links_f[@]}"; do
 	fi	
 done
 
-if [ -z "$( which javac 2>/dev/null)" ]; then #verificando se precisa do jdk
+if [ -z "$(which javac 2>/dev/null)" ]; then #verificando se precisa do jdk
     javac=1
 fi
 if [ $javac = 1 ]; then
     #Downloading java
-    site_java2=( $(curl -L -s "$site_java" | grep -P 'http[s]?://([^"]*jdk[0-9][0-9]?[-]downloads[^"]*)' -o | uniq) )
+    site_java2=( $(curl -L -s "$site_java" | grep -E 'http[s]?://([^"]*jdk[0-9][0-9]?[-]downloads[^"]*)' -o | uniq) )
     echo "Finding java"
-    link_java=( $(curl -L -s "$site_java2" | grep -P 'http[s]?://([^"]*jdk[-][^"]*linux-x64.tar.gz)' -o) )
+    if [ "$so" = "darwin" ]; then
+        echo "Java install not yet supported in macos. Install this and run again: $site_java2"
+        exit 1
+    fi
+    link_java=( $(curl -L -s "$site_java2" | grep -E 'http[s]?://([^"]*jdk[-][^"]*linux-x64.tar.gz)' -o) )
     java="$(echo "$link_java" | grep -Eo '([^/]*$)' )"
     echo "Java founded: $java"
 
@@ -136,8 +141,12 @@ echo 'Aceitando licenças...'
 
 
 #ANDROID_HOME
-echo 'source $HOME/.androidrc' >> "$HOME"/.bashrc
-echo 'source $HOME/.androidrc' >> "$HOME"/.profile
+if [ "$so" = "darwin" ]; then
+    echo 'source $HOME/.androidrc' >> "$HOME"/.bash_profile
+else
+    echo 'source $HOME/.androidrc' >> "$HOME"/.bashrc
+    echo 'source $HOME/.androidrc' >> "$HOME"/.profile
+fi
 
 > "$HOME"/.androidrc #limpando arquivo
 echo 'export ANDROID_HOME='"$dest"'/Sdk' >> "$HOME"/.androidrc
