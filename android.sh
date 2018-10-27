@@ -2,6 +2,7 @@
 pkgs=( #lista de pacotes que serão instalados pelo sdkmanager
     'platforms;android-27'
     'tools'
+    'platform-tools'
     'sources;android-27'
     'build-tools;27.0.3'
     'extras;google;m2repository'
