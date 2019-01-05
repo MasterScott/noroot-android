@@ -44,30 +44,31 @@ if (( $f_remove == 1 )); then
 fi
 
 
-if [ -z "$(which curl)" ] || [ -z "$(which unzip)" ]; then #verificando ferramentas
-    echo "Install curl and unzip..."
+if [ -z "$(which curl)" ]; then #verify tools
+    echo "Install curl..."
     exit 1
 fi
 
-#Cuidando dos locais para download e instalação
+
 if [ -d "$dest" ];then
     if (( $f_yes == 1 )); then
         r="y"
     else
         echo -n "The install directory ($dest) already exist. Can it be deleted ? [Y/n] "
         read r
-        echo "Ok"
     fi
-    if [ "$r" = "n" ] || [ "$r" = "N" ];then
+    if [ "$r" = "n" ] || [ "$r" = "N" ]; then
+        echo 'Exiting...'
         exit 0
     fi
-    rm -rf "${dest:?}" 2>/dev/null #limpando a casa
+    rm -rf "${dest:?}" 2>/dev/null #cleaning
 fi
-mkdir -p "$dest" #confirmando a existência
+mkdir -p "$dest" 
 
 #Downloading java
 site_java2=( $(curl -L -s "$site_java" | grep -E 'http[s]?://([^"]*jdk[0-9][0-9]?[-]downloads[^"]*)' -o | uniq) )
 link_java=( $(curl -L -s "$site_java2" | grep -E 'http[s]?://([^"]*jdk[-][^"]*linux-x64.tar.gz)' -o) )
+link_java=${link_java[$((${#link_java[@]} - 1))]} #select the last link founded
 java="$(echo "$link_java" | grep -Eo '([^/]*$)' )"
 echo "Java founded: $java"
 
@@ -79,11 +80,14 @@ else
 fi
 
 echo "Uncompressing... "
-tar -zxf "$dest/$java" -C "$dest" ; 
+tar -zxf "$dest/$java" -C "$dest" || (echo 'Error in extract' && exit 1)
 rm "$dest/$java"
-mv "$dest"/jdk*/ "$dest"/jdk
+mv "$dest"/jdk*/ "$dest"/jdk || (echo 'Error to move' && exit 1)
+
+rm -f "$HOME"/.javarc #cleaning file
 echo 'export JDK_HOME='"$dest"'/jdk' >> "$HOME"/.javarc
 echo 'export JAVA_HOME='"$dest"'/jdk' >> "$HOME"/.javarc
 echo 'export PATH=$JDK_HOME/bin:$PATH' >> "$HOME"/.javarc
 echo 'source $HOME/.javarc' >> "$HOME"/.bashrc
 echo 'source $HOME/.javarc' >> "$HOME"/.profile
+echo 'Ok'
