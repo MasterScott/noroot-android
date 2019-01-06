@@ -1,4 +1,4 @@
-
+#!/bin/bash
 dest="$HOME"/Java #directory to install
 
 site_java="https://www.oracle.com/technetwork/pt/java/javase/downloads/index.html"
@@ -33,14 +33,17 @@ if (( $f_help == 1 )); then
     exit 0
 fi
 
-
-if (( $f_remove == 1 )); then
+function remove() {
     rm -f $HOME/.javarc
     touch $HOME/.profile
     sed -e 's/.*[.]javarc.*//g' -i $HOME/.profile -i $HOME/.bashrc
     rm -rf ${dest:?}
-    echo 'Remove complete'
+    echo 'Java Remove complete'
     exit 0
+}
+
+if (( $f_remove == 1 )); then
+    remove
 fi
 
 
@@ -63,7 +66,8 @@ if [ -d "$dest" ];then
     fi
     rm -rf "${dest:?}" 2>/dev/null #cleaning
 fi
-mkdir -p "$dest" 
+mkdir -p "$dest"
+trap remove INT
 
 #Downloading java
 site_java2=( $(curl -L -s "$site_java" | grep -E 'http[s]?://([^"]*jdk[0-9][0-9]?[-]downloads[^"]*)' -o | uniq) )
@@ -79,7 +83,7 @@ else
     echo "File already downloaded: $java"    
 fi
 
-echo "Uncompressing... "
+echo "Uncompressing java... "
 tar -zxf "$dest/$java" -C "$dest" || (echo 'Error in extract' && exit 1)
 rm "$dest/$java"
 mv "$dest"/jdk*/ "$dest"/jdk || (echo 'Error to move' && exit 1)
@@ -90,4 +94,4 @@ echo 'export JAVA_HOME='"$dest"'/jdk' >> "$HOME"/.javarc
 echo 'export PATH=$JDK_HOME/bin:$PATH' >> "$HOME"/.javarc
 echo 'source $HOME/.javarc' >> "$HOME"/.bashrc
 echo 'source $HOME/.javarc' >> "$HOME"/.profile
-echo 'Ok'
+echo 'Ok, reopen terminals to apply (or do: . ~/.javarc)'

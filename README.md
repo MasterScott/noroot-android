@@ -2,15 +2,26 @@
 
 Install easily in linux/macOS systems the last version of Android SDK, Android Studio and Java, without root access (or sudo password), for other softwares try the [noroot](https://github.com/wison27/noroot).
 
-### Installing only the SDK
-<pre> git clone https://github.com/morkin1792/noroot-android && cd noroot-android && bash ./android.sh sdk </pre>
+## Install Android Studio && SDK
+<pre> bash ./android.sh </pre>
+When conclude, reOPEN the TERMINAL and run:
+<pre> studio.sh #to open the android studio </pre>
 
-### Install Android Studio and SDK
-<pre> git clone https://github.com/morkin1792/noroot-android && cd noroot-android && bash ./android.sh </pre>
+## Install only Android SDK
+<pre> bash ./android.sh --sdkonly </pre>
 
-### Force Java Install 
-The install java is automatic, when is detected that's necessary. To force the Install (maybe for update your version), do:
-<pre> bash android.sh f jdk </pre>
 
-### macOS
-At the moment only SDK install supported.
+## Usage
+```
+Usage: android.sh [ options ]
+options:
+          -s|--sdkonly   install only sdk (without android studio)
+          -j|--forcejava install the java ignoring if the system already have this
+          -y|--yes       positive to all questions
+          -r|--remove    remove if already installed
+          -h|--help      show this help
+```
+
+## macOS
+At the moment only SDK install is supported
+
